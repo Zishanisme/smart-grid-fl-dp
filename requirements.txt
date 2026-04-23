@@ -1,0 +1,46 @@
+# smart-grid-resilience-ai
+# Install: pip install -r requirements.txt
+#
+# torch-geometric is optional (GraphRiskModel falls back to topology-aware MLP).
+# To enable full GraphSAGE: see install instructions at the bottom.
+
+# ── Core scientific stack ──────────────────────────────────────────────────
+numpy>=1.24,<2.0
+pandas>=2.0
+scipy>=1.11
+scikit-learn>=1.3
+matplotlib>=3.7
+seaborn>=0.13
+
+# ── PyTorch (CPU build — swap for CUDA wheel if you have a GPU) ────────────
+torch>=2.0,<2.4
+
+# ── Differential privacy ──────────────────────────────────────────────────
+opacus>=1.4
+
+# ── Federated learning framework (optional — used by fl_server.py only) ───
+flwr>=1.7
+
+# ── Gradient boosting baseline ────────────────────────────────────────────
+xgboost>=2.0
+
+# ── Explainability ────────────────────────────────────────────────────────
+shap>=0.44
+
+# ── Notebook support ──────────────────────────────────────────────────────
+jupyterlab>=4.0
+ipykernel
+
+# ── Utilities ─────────────────────────────────────────────────────────────
+tqdm
+pyyaml
+
+# ── torch-geometric (optional — for full GraphSAGE message passing) ────────
+# Install separately AFTER torch, matching your torch version:
+#
+#   pip install torch-geometric
+#   pip install torch-scatter torch-sparse -f \
+#     https://data.pyg.org/whl/torch-$(python -c "import torch; print(torch.__version__)").html
+#
+# If torch-geometric is not installed, GraphRiskModel automatically falls back
+# to a topology-aware MLP. All other functionality is unaffected.
