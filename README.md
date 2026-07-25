@@ -1,472 +1,318 @@
-Privacy-Preserving Federated Learning for Smart Grid Outage Prediction
+# ⚡ Privacy-Preserving Federated Learning for Feeder-Level Outage Prediction in Distribution Grids
 
-Federated feeder-level outage prediction across utilities — without sharing raw operational data.
+> **A privacy-preserving AI framework enabling electricity utilities to collaboratively predict feeder-level outages without sharing sensitive operational data.**
 
-This repository contains the implementation and supporting material for the white paper:
+[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)]()
+[![PyTorch](https://img.shields.io/badge/PyTorch-Deep%20Learning-red.svg)]()
+[![Flower](https://img.shields.io/badge/Federated-Learning-green.svg)]()
+[![Opacus](https://img.shields.io/badge/Differential-Privacy-orange.svg)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
 
-Privacy-Preserving Federated Learning for Feeder-Level Outage Prediction in Distribution Grids
+---
 
-The project investigates whether electricity utilities can train a shared outage-prediction model while keeping all raw feeder data local. The system combines federated learning, differential privacy, secure aggregation, and graph-based modelling.
+# Overview
 
-Why this project matters
+Electricity distribution companies generate enormous volumes of operational data from feeders, substations, weather systems, and asset monitoring platforms. While combining this information across utilities could significantly improve outage prediction, regulatory requirements and commercial constraints prevent raw data from being shared.
 
-Utilities hold valuable data on feeder loading, weather exposure, asset condition, maintenance history, and outages. However, legal, regulatory, and commercial constraints often prevent this information from being pooled across organisations.
+This project demonstrates how **Federated Learning**, **Differential Privacy**, and **Secure Aggregation** can be combined to build a collaborative machine learning framework where:
 
-This project takes a different approach:
+- Each utility trains a model locally.
+- Raw operational data never leaves the organisation.
+- Only privacy-preserving model updates are exchanged.
+- A global model is created without exposing sensitive infrastructure data.
 
-Raw data remains within each utility.
+The repository accompanies the research white paper:
 
-Each utility trains a local model.
+> **Privacy-Preserving Federated Learning for Feeder-Level Outage Prediction in Distribution Grids**
 
-Only protected model updates are shared.
+---
 
-A global model is created through federated aggregation.
+# Key Contributions
 
-The aim is to improve outage prediction without requiring any utility to surrender data sovereignty.
+- Privacy-preserving federated learning pipeline for power distribution networks
+- Differential Privacy (DP-SGD) integration using Opacus
+- Secure Aggregation simulation based on Bonawitz et al.
+- Comparison of Local, Centralised and Federated learning
+- Evaluation of Tabular Neural Networks and Graph Neural Networks
+- Analysis of graph learning under topology heterogeneity
+- Synthetic smart grid dataset for reproducible experimentation
 
-Key results
+---
 
-Experimental condition
+# Architecture
 
-AUC-ROC
+```text
+                +----------------------+
+                | Utility A            |
+                | Local Training       |
+                +----------+-----------+
+                           |
+                Protected Model Updates
+                           |
+                +----------v-----------+
+                | Federated Server     |
+                | FedAvg / FedProx     |
+                +----------+-----------+
+                           |
+                Global Model Parameters
+                           |
+      -----------------------------------------
+      |                 |                    |
++-----v-----+     +-----v-----+      +------v------+
+| Utility A |     | Utility B |      | Utility C   |
+| Local Data|     | Local Data|      | Local Data  |
++-----------+     +-----------+      +-------------+
+```
 
-ECE
+---
 
-Privacy budget
+# Experimental Results
 
-Centralised model
+| Model | AUC-ROC |
+|---------|---------|
+| Centralised Model | 0.76–0.78 |
+| Local MLP | 0.53–0.63 |
+| Local GraphSAGE | 0.85–0.86 |
+| Federated MLP | **0.918** |
+| Federated MLP + Differential Privacy (ε≈1.0) | **0.918** |
+| Federated MLP + Differential Privacy (ε≈2.0) | 0.890 |
+| Federated GraphSAGE + DP + Secure Aggregation | 0.38–0.39 |
 
-0.76–0.78
+---
 
-~0.22
+# Key Findings
 
-N/A
+## 1. Federated Learning improves performance
 
-Local-only MLP
+Local models trained independently achieved relatively modest performance.
 
-0.53–0.63
+Collaborative federated learning increased predictive performance to:
 
-~0.30
+**AUC = 0.918**
 
-N/A
+without exchanging raw operational data.
 
-Local-only GraphSAGE
+---
 
-0.85–0.86
+## 2. Privacy is nearly free
 
-~0.40
+Adding Differential Privacy produced almost no measurable reduction in predictive performance.
 
-N/A
+| Configuration | AUC |
+|--------------|------|
+| Federated Learning | 0.918 |
+| Federated + DP (ε≈1.0) | 0.918 |
 
-Federated MLP, no DP
+This demonstrates that strong privacy guarantees can be achieved with negligible utility loss for this application.
 
-0.918
+---
 
-~0.010
+## 3. Graph models failed under federation
 
-N/A
+Graph Neural Networks achieved strong performance when trained locally.
 
-Federated MLP + DP
+However, performance collapsed after federated aggregation.
 
-0.918
+Reason:
 
-~0.007
+Different utilities possess different network topologies.
 
-ε ≈ 1.0
+Graph convolution filters therefore learn topology-specific representations that cannot simply be averaged across clients.
 
-Federated MLP + DP
+---
 
-0.890
+# Dataset
 
-~0.009
+The experiments use a synthetic feeder-level dataset representing multiple electricity distribution utilities.
 
-ε ≈ 2.0
+Dataset characteristics:
 
-Federated GraphSAGE + DP + SecAgg
+- 500 feeders
+- 3 years of daily observations
+- ~547,500 records
+- 3 simulated utility clients
+- Weather variables
+- Asset condition
+- Feeder loading
+- Outage history
+- Distributed Energy Resource penetration
 
-0.38–0.39
+Target:
 
-~0.009
+Predict whether a feeder will experience an outage within the next seven days.
 
-ε ≈ 1.0
+---
 
-Main findings
+# Technology Stack
 
-Federation substantially improved prediction quality.Local-only MLP models achieved AUC values between 0.53 and 0.63, while the federated MLP reached 0.918.
+- Python
+- PyTorch
+- Flower Federated Learning
+- Opacus Differential Privacy
+- Scikit-learn
+- NumPy
+- Pandas
+- NetworkX
+- Matplotlib
 
-Differential privacy had almost no measurable cost at ε ≈ 1.0.The AUC difference between the non-private federated model and the private federated model was below 0.002.
+---
 
-Graph models failed under topology-heterogeneous federation.GraphSAGE performed strongly when trained locally, but collapsed when graph parameters were aggregated across utilities with structurally different network topologies.
+# Repository Structure
 
-Core insight
-
-The strongest improvement came from cross-utility data diversity, not from using a more complex model.
-
-A tabular MLP performed strongly under federated learning because feeder features such as loading, temperature, asset age, and outage history have comparable meaning across utilities.
-
-Graph models behaved differently. Their learned filters depended heavily on each utility's local topology. When those filters were averaged across structurally different networks, the shared graph representation became incoherent.
-
-This motivates a hybrid design:
-
-Federated tabular encoder for transferable feeder representations
-
-Local graph head for utility-specific topology learning
-
-System architecture
-
-Layer
-
-Component
-
-Purpose
-
-Data
-
-Synthetic feeder-level grid dataset
-
-Controlled cross-utility experiments
-
-Features
-
-Rolling 7-day and 30-day statistics, weather, DER and asset indicators
-
-Capture temporal and static risk
-
-Local models
-
-Tabular MLP, GraphRiskModel, SAIDIGraphModel
-
-Feeder-level risk estimation
-
-Federation
-
-FedAvg + FedProx
-
-Shared learning under non-IID data
-
-Privacy
-
-Opacus DP-SGD
-
-Protect individual training records
-
-Aggregation
-
-Bonawitz-style secure aggregation
-
-Hide individual client updates
-
-Evaluation
-
-AUC-ROC, ECE, top-10% capture, epsilon
-
-Measure discrimination, calibration, operational utility, and privacy
-
-Privacy and security design
-
-Differential privacy
-
-The project uses DP-SGD through Opacus.
-
-Each client:
-
-Clips per-sample gradients to a maximum norm.
-
-Adds calibrated Gaussian noise.
-
-Tracks cumulative privacy loss across all federated rounds.
-
-A single persistent PrivacyEngine is used per client so that epsilon accounting is not reset between rounds.
-
-Secure aggregation
-
-The implementation simulates Bonawitz-style secure aggregation.
-
-Each client:
-
-Applies its FedAvg weight before masking.
-
-Generates pairwise masks from shared secrets.
-
-Sends only the masked weighted update.
-
-The server receives only the aggregate sum, not any individual client's update.
-
-The current secure aggregation implementation is an algorithmic simulation. Production use would require X25519, authenticated TLS, and dropout recovery.
-
-Dataset
-
-The experiments use a synthetic dataset calibrated to published engineering and reliability benchmarks.
-
-Dataset characteristics
-
-500 feeders
-
-3 years of daily observations
-
-Approximately 547,500 feeder-day records
-
-3 simulated utility clients
-
-Temporal split: 80% train, 10% validation, 10% test
-
-Multiple climate zones
-
-Asset age, loading, cable, vegetation, DER, and outage-history features
-
-Binary target: outage within the next 7 days
-
-The data is intentionally non-IID across utilities to reflect differences in:
-
-climate
-
-asset age
-
-outage prevalence
-
-feeder condition
-
-loading behaviour
-
-The dataset is synthetic and does not replace validation on real SCADA or ADMS utility records.
-
-Experimental conditions
-
-The repository supports six main comparisons:
-
-Centralised model
-
-Local-only MLP
-
-Local-only graph model
-
-Federated MLP with FedProx
-
-Federated MLP with differential privacy
-
-Federated graph model with differential privacy and secure aggregation
-
-Repository structure
-
-.
-├── README.md
-├── LICENSE
-├── requirements.txt
-├── run.sh
-├── federated_final.py
-│
+```text
 ├── data/
-│   ├── raw/
-│   │   ├── model_dataset.csv
-│   │   └── assets.csv
-│   └── generated/
 │
-├── src/
-│   ├── clients/
-│   ├── models/
-│   ├── privacy/
-│   ├── aggregation/
-│   ├── topology/
-│   └── evaluation/
+├── models/
+│
+├── privacy/
+│
+├── aggregation/
 │
 ├── experiments/
-│   ├── configs/
-│   └── logs/
 │
 ├── results/
-│   ├── tables/
-│   ├── plots/
-│   └── metrics/
 │
-└── paper/
-    └── SmartGrid_WhitePaper_FINAL.pdf
+├── paper/
+│
+├── figures/
+│
+├── requirements.txt
+│
+├── federated_final.py
+│
+└── README.md
+```
 
-Adjust the folder names above to match your final repository layout.
+---
 
-Installation
+# Installation
 
-1. Clone the repository
+Clone the repository
 
-git clone https://github.com/Zishanisme/<YOUR-REPOSITORY>.git
-cd <YOUR-REPOSITORY>
+```bash
+git clone https://github.com/Zishanisme/<repository-name>.git
+```
 
-2. Create a virtual environment
+Create a virtual environment
+
+```bash
+python -m venv .venv
+```
+
+Activate
 
 Windows
 
-python -m venv .venv
+```bash
 .venv\Scripts\activate
+```
 
-macOS / Linux
+Linux / macOS
 
-python3 -m venv .venv
+```bash
 source .venv/bin/activate
+```
 
-3. Install dependencies
+Install dependencies
 
+```bash
 pip install -r requirements.txt
+```
 
-Running the federated experiment
+---
 
-Differential privacy with ε ≈ 1.0
+# Running the Project
 
+Example:
+
+```bash
 python federated_final.py \
-  --data data/raw/model_dataset.csv \
-  --assets data/raw/assets.csv \
-  --rounds 10 \
-  --epsilon 1.0
+    --epsilon 1.0 \
+    --rounds 10
+```
 
-Differential privacy with ε ≈ 2.0
+---
 
-python federated_final.py \
-  --data data/raw/model_dataset.csv \
-  --assets data/raw/assets.csv \
-  --rounds 10 \
-  --epsilon 2.0
+# Privacy Mechanisms
 
-Windows PowerShell
+The project incorporates:
 
-python federated_final.py `
-  --data data/raw/model_dataset.csv `
-  --assets data/raw/assets.csv `
-  --rounds 10 `
-  --epsilon 1.0
+## Differential Privacy
 
-Expected outputs
+- DP-SGD
+- Gradient clipping
+- Gaussian noise
+- Privacy accounting using ε (epsilon)
 
-Depending on configuration, the pipeline produces:
+## Secure Aggregation
 
-AUC-ROC
+- Pairwise masking
+- Weighted FedAvg updates
+- Protected client updates
 
-Expected Calibration Error
+---
 
-Top-10% capture rate
+# Threat Model
 
-Cumulative epsilon
+The framework considers protection against:
 
-Per-client metrics
+- Membership inference attacks
+- Honest-but-curious federated servers
+- Passive communication interception
 
-Federated-round logs
+Future work includes:
 
-Privacy-accounting output
+- Byzantine robustness
+- Model poisoning defence
+- Sybil attack protection
 
-Graph-filter alignment measurements
+---
 
-Model checkpoints
+# Future Work
 
-Result tables and plots
+- Real SCADA integration
+- ADMS integration
+- Graph-aware federated optimisation
+- Federated Graph Transformers
+- Adaptive privacy budgets
+- Production secure aggregation
+- Multi-utility validation
 
-Graph federation failure
+---
 
-One of the main findings is that locally strong graph models do not necessarily federate well.
+# White Paper
 
-Observed result:
-
-Local GraphSAGE: AUC 0.85–0.86
-
-Federated GraphSAGE: AUC 0.38–0.39
-
-The likely reason is topology heterogeneity.
-
-Graph convolutional filters learn expectations about local neighbourhood structure. When clients operate different grid topologies, averaging those filters can produce a global model that is well-matched to none of them.
-
-Measured cosine similarity:
-
-Graph filter alignment: 0.3–0.5
-
-MLP weight alignment: 0.8–0.95
-
-Threat model
-
-Threat
-
-Mitigation
-
-Honest-but-curious server
-
-DP-SGD + secure aggregation
-
-Passive network eavesdropping
-
-TLS in production deployment
-
-Membership inference
-
-Differential privacy
-
-Maliciously scaled client updates
-
-Gradient clipping
-
-Not yet fully addressed:
-
-Sybil attacks
-
-Malicious server deviation
-
-Data poisoning
-
-Full Byzantine robustness
-
-Inference attacks against the released global model
-
-Regulatory relevance
-
-The architecture is designed to support privacy-by-design and data-minimisation objectives under:
-
-GDPR Article 5
-
-GDPR Article 25
-
-EU AI Act requirements for critical infrastructure
-
-Saudi Arabia PDPL
-
-UAE PDPL / ADGM frameworks
-
-This repository demonstrates technical controls. It does not by itself establish legal compliance.
-
-Future work
-
-Federated encoder with local graph heads
-
-Validation using real SCADA or ADMS data
-
-Full privacy-budget sweep across ε ∈ {0.5, 1.0, 2.0, 4.0}
-
-SAIDI-weighted outage optimisation
-
-Byzantine-robust aggregation
-
-Production-grade secure aggregation
-
-Larger federations with more utility clients
-
-Formal multi-seed evaluation
-
-White paper
-
-The full white paper is available in the paper/ directory.
+The complete research white paper is available in the **paper/** directory.
 
 Suggested citation:
 
-@techreport{khan2025smartgridfl,
-  title={Privacy-Preserving Federated Learning for Feeder-Level Outage Prediction in Distribution Grids},
-  author={Khan, Zishan},
-  year={2025},
-  institution={Independent Research}
+```bibtex
+@techreport{khan2025,
+title={Privacy-Preserving Federated Learning for Feeder-Level Outage Prediction in Distribution Grids},
+author={Zishan Khan},
+year={2025}
 }
+```
 
-Author
+---
 
-Zishan KhanEnergy AI ResearcherFederated Learning and Privacy Engineering
+# Author
 
-GitHub: Zishanisme
+**Zishan Ali Khan**
 
-LinkedIn: Add your LinkedIn URL
+Energy AI | Machine Learning | Federated Learning | Smart Grids
 
-Email: Add your preferred public email
+- GitHub: https://github.com/Zishanisme
+- LinkedIn: *(Add your LinkedIn profile)*
 
-License
+---
 
-This project is licensed under the MIT License. See LICENSE for details.# smart-grid-fl-dp
+# License
+
+Released under the MIT License.
+
+---
+
+# Disclaimer
+
+This repository is intended for research and educational purposes. The experiments are conducted using synthetic data and should not be deployed in production power systems without additional validation using real utility datasets.
